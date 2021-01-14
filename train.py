@@ -93,4 +93,4 @@ if INTERVAL_PREDICT:
         plot.show()
 else:
     for x, y in validation_data.take(1):
-        multi_step_plot(x[0], y[0], np.array([0]))
+        multi_step_plot(x[0], y[0], model.predict(x)[0])

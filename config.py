@@ -32,7 +32,7 @@ CHECKPOINT_PATH = "training_test/cp.ckpt"
 PAST_HISTORY = 720
 
 # Сколько будущих строк будем пытаться предсказать?
-FUTURE_TARGET = 15 if TRAIN else 150
+FUTURE_TARGET = 15 if INTERVAL_PREDICT else 150
 
 # С каким шагом берём выборку?
 STEP = 1
