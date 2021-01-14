@@ -1,26 +1,28 @@
 import tensorflow as tf
+
+from config import TRAIN_SPLIT, PAST_HISTORY, FUTURE_TARGET, BUFFER_SIZE, BATCH_SIZE, PREDICT_COLUMN_INDEX
+from data_utils import multivariate_data
 from plot_utils import plot_train_history
-from data import multivariate_data
-from config import TRAIN_SPLIT, PAST_HISTORY, FUTURE_TARGET, STEP, BUFFER_SIZE, BATCH_SIZE
 
 
+# Создание и обучение модели с нуля
 def create_and_train_model(dataset,
                            epochs: int,
                            steps: int,
                            validation_data,
-                           interval_predict: bool = False,
+                           single_step: bool = False,
                            checkpoint_dir: str = None,
                            ):
+    # Подготавливаем данные для обучения
     x_train, y_train = multivariate_data(
         dataset,  # dataset
-        dataset[:, 1],  # target
-        0, TRAIN_SPLIT,  # start / end indexes
+        dataset[:, PREDICT_COLUMN_INDEX],  # target
+        0,  # start index
+        TRAIN_SPLIT,  # end index
         PAST_HISTORY,  # history size
         FUTURE_TARGET,  # target size
-        STEP,  # step
-        single_step=True)
+        single_step=single_step)
 
-    # Данные для обучения
     # Создание датасета для обучения
     train_data = tf.data.Dataset.from_tensor_slices((x_train, y_train))
     train_data = train_data \
@@ -29,9 +31,13 @@ def create_and_train_model(dataset,
         .batch(BATCH_SIZE) \
         .repeat()
 
-    model = create_model(x_train, interval_predict=interval_predict)
+    # Создание модели
+    model = create_model(x_train, single_step)
 
+    # Колбеки. Используется один для сохранения состояния модели при окончании эпохи
     callbacks = []
+
+    # Если указана директория для сохранения модели, то добавляем колбек
     if checkpoint_dir is not None:
         # Создание колбека для сохранения чекпонитов при обучении
         callbacks.append(tf.keras.callbacks.ModelCheckpoint(
@@ -48,22 +54,24 @@ def create_and_train_model(dataset,
         validation_data=validation_data,
         callbacks=callbacks,
         validation_steps=50,
-        use_multiprocessing=True
+        use_multiprocessing=True,
     )
 
-    plot_train_history(model_history, 'Single Step Training and validation loss')
+    # Вывод графика "как обучилоссс"
+    plot_train_history(
+        model_history,
+        '{} step training and validation loss'.format('Single' if single_step else 'Multi')
+    )
 
 
-def create_model(x_train,
-                 interval_predict: bool
-                 ):
+def create_model(x_train, single: bool):
     # Создание модели
     model = tf.keras.models.Sequential()
 
-    if not interval_predict:
+    if single:
         # Если точечное
         model.add(tf.keras.layers.LSTM(32, input_shape=x_train.shape[-2:]))
-        model.add(tf.keras.layers.Dense(1))
+        model.add(tf.keras.layers.Dense(1))  # один выход - предсказание столбца
 
         # Компиляция модели
         model.compile(optimizer=tf.keras.optimizers.RMSprop(), loss='mae')
@@ -73,7 +81,7 @@ def create_model(x_train,
                                        return_sequences=True,
                                        input_shape=x_train.shape[-2:]))
         model.add(tf.keras.layers.LSTM(16, activation='relu'))
-        model.add(tf.keras.layers.Dense(72))
+        model.add(tf.keras.layers.Dense(FUTURE_TARGET))  # НЕ ТОЧНО
 
         # Компиляция модели
         model.compile(optimizer=tf.keras.optimizers.RMSprop(clipvalue=1.0), loss='mae')
