@@ -6,7 +6,7 @@ import tensorflow as tf
 from config import DATASET_URL, TRAIN_SPLIT, CHECKPOINT_PATH, EPOCHS, \
     STEPS_PER_EPOCH, PAST_HISTORY, FUTURE_TARGET, BATCH_SIZE, \
     TRAIN, SINGLE_STEP, PREDICT_COLUMN_INDEX
-from data_utils import multivariate_data, normalize_dataset, normalize_value
+from data_utils import multivariate_data, normalize_dataset, normalize_value, pidor
 from longpoll import get_last_signals
 from plot_utils import show_plot, multi_step_plot
 from train_utils import create_and_train_model
@@ -62,13 +62,13 @@ else:
     model = tf.keras.models.load_model(CHECKPOINT_PATH)
 
 
-def ____temporary_function____(model, x, mean, sd):
+def ____temporary_function____(model, x, y, mean, sd):
+    print(x)
     predict_result = model.predict(x)[0]
 
     normalized_value = normalize_value(predict_result, mean, sd, PREDICT_COLUMN_INDEX)
     print('norm_value=', normalized_value)
 
-    """
     show_plot(
         [
             x[0][:, 1].numpy(),
@@ -78,48 +78,65 @@ def ____temporary_function____(model, x, mean, sd):
         12,
         'Single Step Prediction'
     ).show()
-    """
+
+
+def hueta():
+    signals = get_last_signals()
+    last_games = signals[features_considered]
+    last_games.index = signals['id']
+
+    last_signal_id = signals.values[len(signals) - 1][1]
+
+    print('lsid', last_signal_id)
+
+    # EXPECT: (54159, 8)
+    # ACTUAL: (720, 8)
+    last_games =  (last_games.values - mean) / sd
+
+    # EXPECT: (13438, 720, 8) (13438,)
+    # ACTUAL: (720, 0, 8) (720,)
+    x = pidor(
+        last_games,  # dataset
+        last_games[:, PREDICT_COLUMN_INDEX],  # target
+        0,  # start index
+        720,  # end index
+        PAST_HISTORY)  # history size
+
+    # print(x.shape)
+
+    # EXPECT: ((None, 720, 8), (None,))
+    # ACTUAL: ((None,), (None,))
+    val_data = tf.data.Dataset.from_tensor_slices(x) \
+        .batch(BATCH_SIZE) \
+        .repeat()
+
+    print(val_data)
+
+    #
+
+    for x1 in val_data.take(1):
+        # EXPECT: (256, 720, 8)
+        # ACTUAL: (256, 720, 8)
+        print(x1.shape)
+
+        predict_result = model.predict(x1)[0]
+        print('predict=', predict_result)
+        normalized_value = normalize_value(predict_result, mean, sd, PREDICT_COLUMN_INDEX)
+        print('norm_value=', normalized_value, 'for signal', last_signal_id + 1)
+        # ____temporary_function____(model, last_games, 0, 0)
+
+
+def chetkaya():
+    for x, y in validation_data.take(3):
+        print(x.shape, type(x))
+        ____temporary_function____(model, x, y, mean, sd)
 
 
 print('until here')
 
 if SINGLE_STEP:
-    signals = get_last_signals()
-    last_games = signals[features_considered]
-    last_games.index = signals['id']
-
-    # EXPECT: (54159, 8)
-    # ACTUAL: (720, 8)
-    last_games = last_games.values
-
-    # EXPECT: (13438, 720, 8) (13438,)
-    # ACTUAL: (720, 0, 8) (720,)
-    x, y = multivariate_data(
-        last_games,  # dataset
-        last_games[:, PREDICT_COLUMN_INDEX],  # target
-        0,  # start index
-        None,  # end index
-        0,  # history size 100% equals 0
-        FUTURE_TARGET,  # target size
-        single_step=True)
-    print(x.shape, y.shape)
-
-    # EXPECT: ((None, 720, 8), (None,))
-    # ACTUAL: ((None, 0, 8), (None,))
-    val_data = tf.data.Dataset.from_tensor_slices((x, y)) \
-        .batch(BATCH_SIZE) \
-        .repeat()
-    print(val_data)
-
-    #for x, y in validation_data.take(3):
-    #    print(x.shape, type(x))
-
-    for x1, y1 in val_data.take(1):
-        # EXPECT: (256, 720, 8)
-        # ACTUAL: (256, 0, 8)
-        print(x1.shape)
-        ____temporary_function____(model, last_games, lg_mean, lg_sd)
-
+    hueta()
+    # chetkaya()
 else:
     for x, y in validation_data.take(1):
         pred = model.predict(x)[0]

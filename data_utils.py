@@ -20,8 +20,6 @@ def multivariate_data(dataset,
 
     for i in range(start_index, end_index):
         indices = range(i - history_size, i)
-        if history_size == 0:
-            print(indices, dataset[indices])
         data.append(dataset[indices])
 
         if single_step:
@@ -31,32 +29,18 @@ def multivariate_data(dataset,
 
     return np.array(data), np.array(labels)
 
-def multivariate_data(dataset,
-                      target,
-                      start_index: int,
-                      end_index: Optional[int],
-                      history_size: int,
-                      target_size: int,
-                      single_step=False):
+
+def pidor(dataset,
+          target,
+          start_index: int,
+          end_index: int,
+          target_size: int):
     data = []
-    labels = []
 
-    start_index = start_index + history_size
-    if end_index is None:
-        end_index = len(dataset) - target_size
+    for i in range(256):
+        data.append(dataset[:])
 
-    for i in range(start_index, end_index):
-        indices = range(i - history_size, i)
-        if history_size == 0:
-            print(indices, dataset[indices])
-        data.append(dataset[indices])
-
-        if single_step:
-            labels.append(target[i + target_size])
-        else:
-            labels.append(target[i:i + target_size])
-
-    return np.array(data), np.array(labels)
+    return np.array(data)
 
 
 def normalize_dataset(dataset, split: int):
