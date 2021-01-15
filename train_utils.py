@@ -62,6 +62,8 @@ def create_and_train_model(dataset,
         model_history,
         '{} step training and validation loss'.format('Single' if single_step else 'Multi')
     )
+    
+    return model
 
 
 def create_model(x_train, single: bool):

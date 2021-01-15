@@ -35,7 +35,7 @@ BATCH_SIZE = 256
 BUFFER_SIZE = 10000
 
 # Где находится натренирванная сеть
-CHECKPOINT_PATH = "training/cp.ckpt"
+CHECKPOINT_PATH = "training"
 
 # Сколько прошлых строк используется для вычисления ответа (и обучения)
 PAST_HISTORY = 720
