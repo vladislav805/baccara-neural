@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from bot_utils import send_telegram_message, set_interval, get_card_by_id
 from config import DATASET_URL, TRAIN_SPLIT, CHECKPOINT_PATH, EPOCHS, \
     STEPS_PER_EPOCH, PAST_HISTORY, FUTURE_TARGET, BATCH_SIZE, \
     TRAIN, SINGLE_STEP, PREDICT_COLUMN_INDEX
@@ -80,7 +81,7 @@ def ____temporary_function____(model, x, y, mean, sd):
     ).show()
 
 
-def hueta():
+def hueta(send=False):
     signals = get_last_signals()
     last_games = signals[features_considered]
     last_games.index = signals['id']
@@ -89,24 +90,18 @@ def hueta():
 
     print('lsid', last_signal_id)
 
-    # EXPECT: (54159, 8)
-    # ACTUAL: (720, 8)
-    last_games =  (last_games.values - mean) / sd
+    # По параметрам, которые использовались при обучении нейросетки
+    last_games = (last_games.values - mean) / sd
 
-    # EXPECT: (13438, 720, 8) (13438,)
-    # ACTUAL: (720, 0, 8) (720,)
-    x = pidor(
-        last_games,  # dataset
-        last_games[:, PREDICT_COLUMN_INDEX],  # target
-        0,  # start index
-        720,  # end index
-        PAST_HISTORY)  # history size
+    # По собственным параметрам (самого датасета из 720 последних сигналов)
+    # last_games, v_mean, v_sd = normalize_dataset(last_games.values, len(last_games.values))
 
-    # print(x.shape)
+    # Без нормализации
+    # last_games = last_games.values
 
     # EXPECT: ((None, 720, 8), (None,))
     # ACTUAL: ((None,), (None,))
-    val_data = tf.data.Dataset.from_tensor_slices(x) \
+    val_data = tf.data.Dataset.from_tensor_slices([last_games]) \
         .batch(BATCH_SIZE) \
         .repeat()
 
@@ -114,16 +109,27 @@ def hueta():
 
     #
 
-    for x1 in val_data.take(1):
+    for x2 in val_data.take(1):
         # EXPECT: (256, 720, 8)
         # ACTUAL: (256, 720, 8)
-        print(x1.shape)
+        print(x2.shape)
 
-        predict_result = model.predict(x1)[0]
+        predict_result = model.predict(x2)[0]
         print('predict=', predict_result)
-        normalized_value = normalize_value(predict_result, mean, sd, PREDICT_COLUMN_INDEX)
-        print('norm_value=', normalized_value, 'for signal', last_signal_id + 1)
+        normalized_value = normalize_value(predict_result, mean, sd, PREDICT_COLUMN_INDEX)[0]
+        card = get_card_by_id(round(normalized_value))
+        res_str = "Signal = {0}\nPredict = {1}\nNormalized predict = {2}\nCard = {3}".format(
+            str(last_signal_id + 1),
+            str(predict_result),
+            str(round(normalized_value, 3)),
+            card,
+        )
+        print('norm_value=', res_str)
         # ____temporary_function____(model, last_games, 0, 0)
+
+        if send:
+            send_telegram_message(63923, res_str)
+            send_telegram_message(485056, res_str)
 
 
 def chetkaya():
@@ -135,8 +141,11 @@ def chetkaya():
 print('until here')
 
 if SINGLE_STEP:
-    hueta()
+    # hueta()
     # chetkaya()
+
+    hueta(True)
+    set_interval(lambda: hueta(True), 30)
 else:
     for x, y in validation_data.take(1):
         pred = model.predict(x)[0]

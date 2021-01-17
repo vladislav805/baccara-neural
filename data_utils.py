@@ -45,10 +45,10 @@ def pidor(dataset,
 
 def normalize_dataset(dataset, split: int):
     # Среднее значение
-    mean = dataset[:split].mean(axis=0)
+    mean = dataset.mean(axis=0)
 
     # Стандартное отклонение
-    sd = dataset[:split].std(axis=0)
+    sd = dataset.std(axis=0)
 
     # Нормализация данных
     dataset = (dataset - mean) / sd
