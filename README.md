@@ -18,6 +18,14 @@
     ```
 -   Train model
     ```shell
-    python train.py
+    python main.py train
     ```
--   ... todo
+-   Test on some data (checkout in code)
+    ```shell
+    python main.py predict  # one test
+    python main.py masstest  # multiple test 
+    ```
+-   Run Telegram bot
+    ```shell
+    TG_TOKEN=123456:abcdef python main.py bot
+    ```

@@ -1,90 +1,93 @@
-import os
-import numpy as np
-import pandas as pd
+import matplotlib.pyplot as plt
 import tensorflow as tf
 
-from config import DATASET_URL, TRAIN_SPLIT, CHECKPOINT_PATH, EPOCHS, \
-    STEPS_PER_EPOCH, PAST_HISTORY, FUTURE_TARGET, BATCH_SIZE, \
-    TRAIN, SINGLE_STEP, PREDICT_COLUMN_INDEX
-from data_utils import multivariate_data, normalize_dataset, normalize_value
-from plot_utils import show_plot, multi_step_plot
-from train_utils import create_and_train_model
+from config import *
+from data import multivariate_dataset, split_dataset
+from longpoll import get_train_data
+from model import get_model
+from normalize import normalize_dataset
 
-# Загрузка датасета
-zip_path = tf.keras.utils.get_file(origin=DATASET_URL, fname='data_export')
-csv_path, _ = os.path.splitext(zip_path)
+DATASET_TRAIN_SPLIT = 40000
 
-# Чтение датасета
-df = pd.read_csv(csv_path)
+# tf.keras.backend.set_floatx('float64')
 
-# Инициализация рандома
-tf.random.set_seed(13)
 
-# Названия колонок, которые будут использоваться как параметры
-features_considered = [
-    'cardPlayer1', 'cardPlayer2', 'mastPlayer1', 'mastPlayer2',
-    'cardBanker1', 'cardBanker2', 'mastBanker1', 'mastBanker2',
-]
+def get_normalization_params():
+    dataset, _ = get_train_data()
+    train, _ = split_dataset(dataset, DATASET_TRAIN_SPLIT)
+    _, mean, sd = normalize_dataset(train)
+    return mean, sd
 
-# Получение только выбранных колонок (параметров)
-features = df[features_considered]
-features.index = df['id']  # добавление индекса
 
-# нормализация датасета, среднее значение и стандартное отклонение (последние
-# два нужны для нормализации результата)
-dataset, mean, sd = normalize_dataset(features.values, TRAIN_SPLIT)
+def do_train(_: None):
+    # скачали и подготовили датасет
+    dataset, _ = get_train_data()
 
-# Подготовка данных для валидации
-x_validation, y_validation = multivariate_data(
-    dataset,  # dataset
-    dataset[:, PREDICT_COLUMN_INDEX],  # target
-    TRAIN_SPLIT,  # start index
-    None,  # end index
-    PAST_HISTORY,  # history size
-    FUTURE_TARGET,  # target size
-    single_step=SINGLE_STEP)
+    train, validate = split_dataset(dataset, DATASET_TRAIN_SPLIT)
 
-# Данные для сверки/проверки/валидации
-validation_data = tf.data.Dataset.from_tensor_slices((x_validation, y_validation))\
-    .batch(BATCH_SIZE)\
-    .repeat()
+    # нормализовали данные для обучения
+    train, mean, sd = normalize_dataset(train)
 
-# Если обучаем
-if TRAIN:
-    model = create_and_train_model(dataset,
-                                   epochs=EPOCHS,
-                                   steps=STEPS_PER_EPOCH,
-                                   validation_data=validation_data,
-                                   single_step=SINGLE_STEP,
-                                   checkpoint_dir=os.path.dirname(CHECKPOINT_PATH))
-else:
-    # Если не обучаем, значит тупо загружаем
-    model = tf.keras.models.load_model(CHECKPOINT_PATH)
+    # разбили данные для обучения
+    train_x, train_y = multivariate_dataset(
+        dataset=train,
+        column_index=DATASET_COLUMN_INDEX,
+        history_size=HISTORY_SIZE,
+        target_size=TARGET_SIZE,
+    )
 
-if SINGLE_STEP:
-    for x, y in validation_data.take(3):
-        predict_result = model.predict(x)[0]
+    validate, _, _ = normalize_dataset(validate, mean, sd)
 
-        normalized_value = normalize_value(predict_result, mean, sd, PREDICT_COLUMN_INDEX)
-        print('norm_value=', normalized_value)
+    # разбили данные для валидации
+    validate_x, validate_y = multivariate_dataset(
+        dataset=validate,
+        column_index=DATASET_COLUMN_INDEX,
+        history_size=HISTORY_SIZE,
+        target_size=TARGET_SIZE,
+    )
 
-        plot = show_plot(
-            [
-                x[0][:, 1].numpy(),
-                y[0].numpy(),
-                predict_result,
-            ],
-            12,
-            'Single Step Prediction'
-        )
-        plot.show()
-else:
-    for x, y in validation_data.take(1):
-        pred = model.predict(x)[0]
-        print('x', x[0].shape)
-        print('y', y[0].shape)
-        print('pred', pred.shape)
-        multi_step_plot(
-            np.array(x[0]),
-            np.array(y[0]),
-            pred)
+    batch = 256
+
+    train_dataset = tf.data.Dataset.from_tensor_slices((train_x, train_y))\
+        .shuffle(1024)\
+        .batch(batch) \
+        .cache()\
+        .repeat()
+
+    validate_dataset = tf.data.Dataset.from_tensor_slices((validate_x, validate_y))\
+        .batch(batch)\
+        .repeat()
+
+    print(validate_y)
+
+    model = get_model(path=MODEL_TRAINED_PATH,
+                      input_shape=(720, 8),
+                      train=True)
+
+    model_history = model.fit(
+        train_dataset,
+        validation_data=validate_dataset,
+        validation_steps=50,
+        epochs=20,
+        steps_per_epoch=6,
+        callbacks=[
+            tf.keras.callbacks.ModelCheckpoint(
+                filepath=MODEL_TRAINED_PATH,
+                save_weights_only=False,
+                save_best_only=True,
+            )
+        ],
+        use_multiprocessing=True,
+    )
+
+    loss = model_history.history['loss']
+    val_loss = model_history.history['val_loss']
+    epochs = range(len(loss))
+    plt.figure(1)
+    plt.plot(epochs, loss, 'b', label='Training loss')
+    plt.plot(epochs, val_loss, 'r', label='Validation loss')
+    plt.legend(loc='upper left')
+    plt.show()
+
+
+
