@@ -17,7 +17,7 @@ TRAIN = False
 SINGLE_STEP = True
 
 # Индекс колонки, которую мы хотим предсказать
-PREDICT_COLUMN_INDEX = 1
+PREDICT_COLUMN_INDEX = 0
 
 ############
 # Обучение #
