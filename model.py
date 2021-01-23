@@ -17,7 +17,7 @@ def get_model(path: str = None,  # Путь к модели
     else:
         if exists:
             answer = input('Model on path {} already exists. Rewrite? (y - continue): ')
-            if answer != 'y':
+            if answer != 'y' and answer != 'н':
                 exit(0)
 
         if path is not None:
@@ -32,6 +32,7 @@ def create_model(input_shape):
     model = tf.keras.models.Sequential()
 
     model.add(tf.keras.layers.LSTM(32, input_shape=input_shape))
+    model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.Dense(1))  # один выход - предсказание столбца
 
     # Компиляция модели

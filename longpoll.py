@@ -20,8 +20,8 @@ def get_last_signal_id(dataset) -> int:
 def get_train_data() -> Tuple[pd.Series, int]:
     zip_path = tf.keras.utils.get_file(
         # origin='http://longpoll.ru/dev/export.php?since=51587&count=54158',
-        origin='/home/vlad805/www/__cat_long/result.csv',
-        fname='data_export')
+        origin='http://longpoll.ru/zalupa_na_provode.csv',
+        fname='zalupa_na_provode')
 
     csv_path, _ = os.path.splitext(zip_path)
 
