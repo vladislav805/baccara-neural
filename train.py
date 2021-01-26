@@ -67,9 +67,10 @@ def do_train(_: None):
     model_history = model.fit(
         train_dataset,
         validation_data=validate_dataset,
-        validation_steps=50,
-        epochs=20,
-        steps_per_epoch=50,
+        validation_steps=150,
+        epochs=60,
+        steps_per_epoch=1440,
+        # batch_size=1,
         callbacks=[
             tf.keras.callbacks.ModelCheckpoint(
                 filepath=MODEL_TRAINED_PATH,
