@@ -1,4 +1,5 @@
 import threading
+from typing import List
 
 
 def set_interval(func, sec):
@@ -31,3 +32,13 @@ __cards = {
 def get_card_by_id(id: float) -> str:
     i = int(id)
     return 'UNKNOWN' if i not in __cards else __cards[i]
+
+
+def card_to_vector(n: int) -> List[int]:
+    vec = [0] * 13
+    vec[n - 2] = 1
+    return vec
+
+
+def vector_to_card(vec: List[int]) -> int:
+    return vec.index(1) + 2

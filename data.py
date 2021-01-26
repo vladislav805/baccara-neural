@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from utils import card_to_vector
+
 
 def split_dataset(dataset: pd.Series, by: int):
     return dataset[:by], dataset[by:]
@@ -26,6 +28,6 @@ def multivariate_dataset(dataset,  # наш датасет (матрица)
         xs.append(dataset[indexes])
 
         # добавляем ответ из строки `текущая + target`
-        ys.append(dataset[i + target_size][column_index])
+        ys.append(card_to_vector(dataset[i + target_size][column_index]))
 
     return np.array(xs), np.array(ys)

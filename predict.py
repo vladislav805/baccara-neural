@@ -11,6 +11,8 @@ from data import split_dataset
 
 
 # С какого сигнала брать (использовать только для тестов, если последних сигналов недостаточно, иначе None)
+from utils import vector_to_card
+
 SINCE = 147141
 
 
@@ -32,7 +34,7 @@ def predict_by_last_signals(model,
     if model is None:
         model = get_model(MODEL_TRAINED_PATH)
 
-    predict = model.predict(item)[0, 0]
+    predict = vector_to_card(model.predict(item)[0])
 
     # Предсказываем
     predicted = normalize_value(
