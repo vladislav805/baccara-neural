@@ -25,9 +25,6 @@ def do_train(_: None):
 
     train, validate = split_dataset(dataset, DATASET_TRAIN_SPLIT)
 
-    # нормализовали данные для обучения
-    train, mean, sd = normalize_dataset(train)
-
     # разбили данные для обучения
     train_x, train_y = multivariate_dataset(
         dataset=train,
@@ -36,7 +33,8 @@ def do_train(_: None):
         target_size=TARGET_SIZE,
     )
 
-    validate, _, _ = normalize_dataset(validate, mean, sd)
+    # нормализовали данные для обучения
+    train, mean, sd = normalize_dataset(train)
 
     # разбили данные для валидации
     validate_x, validate_y = multivariate_dataset(
@@ -45,6 +43,8 @@ def do_train(_: None):
         history_size=HISTORY_SIZE,
         target_size=TARGET_SIZE,
     )
+
+    validate, _, _ = normalize_dataset(validate, mean, sd)
 
     batch = 256
 

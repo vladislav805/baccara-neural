@@ -41,4 +41,4 @@ def card_to_vector(n: int) -> List[int]:
 
 
 def vector_to_card(vec: List[int]) -> int:
-    return vec.index(1) + 2
+    return vec.index(max(vec)) + 2
