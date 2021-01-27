@@ -6,6 +6,7 @@ import pandas as pd
 from time import time
 
 # Названия колонок, которые будут использоваться как параметры
+
 features_considered = [
     'cardPlayer1', 'cardPlayer2', 'mastPlayer1', 'mastPlayer2',
     'cardBanker1', 'cardBanker2', 'mastBanker1', 'mastBanker2',
@@ -13,7 +14,7 @@ features_considered = [
 
 
 def get_last_signal_id(dataset) -> int:
-    return int(dataset[-1:]['id'])
+    return int(dataset[-1:]['signal_id'])
 
 
 # Получить датасет, по которому будем обучать
@@ -45,12 +46,12 @@ def get_last_signals() -> Tuple[Union[pd.Series, list], Optional[int]]:
             origin='http://longpoll.ru/dev/export.php?' + ncrnd,
         )
 
-        last_games = pd.read_csv(path)
+        df = pd.read_csv(path)
 
-        last_signal_id = get_last_signal_id(last_games)
+        last_signal_id = get_last_signal_id(df)
 
-        last_games = last_games[features_considered]
-        last_games.index = last_games['id']
+        last_games = df[features_considered]
+        last_games.index = df['id']
 
         return last_games.values, last_signal_id
     except Exception:

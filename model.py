@@ -31,8 +31,8 @@ def get_model(path: str = None,  # Путь к модели
 def create_model(input_shape):
     # Создание модели
     model = tf.keras.models.Sequential()
-
-    model.add(tf.keras.layers.LSTM(32, input_shape=input_shape, dropout=0.1, activation='softmax'))
+    # , activation='softmax'
+    model.add(tf.keras.layers.LSTM(16, input_shape=input_shape, dropout=0.1, activation='softmax'))
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.Dense(13))
     # model.add(tf.keras.layers.BatchNormalization())

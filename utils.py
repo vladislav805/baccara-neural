@@ -1,6 +1,8 @@
 import threading
 from typing import List
 
+import numpy
+
 
 def set_interval(func, sec):
     def func_wrapper():
@@ -40,5 +42,5 @@ def card_to_vector(n: int) -> List[int]:
     return vec
 
 
-def vector_to_card(vec: List[int]) -> int:
-    return vec.index(max(vec)) + 2
+def vector_to_card(vec) -> int:
+    return numpy.argmax(vec) + 2
