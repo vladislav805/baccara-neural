@@ -7,7 +7,7 @@ from longpoll import get_train_data
 from model import get_model
 from normalize import normalize_dataset
 
-DATASET_TRAIN_SPLIT = 24000
+DATASET_TRAIN_SPLIT = 20000
 
 # tf.keras.backend.set_floatx('float64')
 
@@ -46,17 +46,17 @@ def do_train(_: None):
 
     validate, _, _ = normalize_dataset(validate, mean, sd)
 
-    batch = 256
+    batch = 1
 
     train_dataset = tf.data.Dataset.from_tensor_slices((train_x, train_y))\
         .shuffle(1024)\
         .batch(batch) \
         .cache()\
-        .repeat()
+        # .repeat()
 
     validate_dataset = tf.data.Dataset.from_tensor_slices((validate_x, validate_y))\
         .batch(batch)\
-        .repeat()
+        # .repeat()
 
     print(validate_y)
 
@@ -67,11 +67,11 @@ def do_train(_: None):
     model_history = model.fit(
         train_dataset,
         validation_data=validate_dataset,
-        validation_steps=50,
-        epochs=50,
-        steps_per_epoch=1440,
+        validation_steps=200,
+        epochs=5,
+        # steps_per_epoch=19280,
         # initial_epoch=10,
-        # batch_size=1,
+        batch_size=1,
         callbacks=[
             tf.keras.callbacks.ModelCheckpoint(
                 filepath=MODEL_TRAINED_PATH,

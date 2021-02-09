@@ -2,7 +2,7 @@ import os.path
 from typing import Optional, Tuple
 
 import tensorflow as tf
-
+from tensorflow.python.keras import regularizers
 
 
 def get_model(path: str = None,  # Путь к модели
@@ -31,13 +31,13 @@ def get_model(path: str = None,  # Путь к модели
 def create_model(input_shape):
     # Создание модели
     model = tf.keras.models.Sequential()
-    # , activation='softmax'
-    model.add(tf.keras.layers.LSTM(16, input_shape=input_shape, dropout=0.1, activation='softmax'))
+    # , activation='softmax, dropout=0.1'
+    model.add(tf.keras.layers.LSTM(2, input_shape=input_shape, activity_regularizer=regularizers.l1(0.01)))
     model.add(tf.keras.layers.BatchNormalization())
-    model.add(tf.keras.layers.Dense(13))
+    model.add(tf.keras.layers.Dense(13, activation='softmax'))
     # model.add(tf.keras.layers.BatchNormalization())
 
     # Компиляция модели
-    model.compile(optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.00005), loss='categorical_crossentropy')
+    model.compile(optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.000000005), loss='categorical_crossentropy')
 
     return model

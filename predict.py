@@ -37,12 +37,13 @@ def predict_by_last_signals(model,
     predict = vector_to_card(model.predict(item)[0])
 
     # Предсказываем
-    predicted = normalize_value(
-        predict,
-        mean[DATASET_COLUMN_INDEX],
-        sd[DATASET_COLUMN_INDEX])
-
-    return predicted, int(np.fix(predicted))
+    """
+        predicted = normalize_value(
+            predict,
+            mean[DATASET_COLUMN_INDEX],
+            sd[DATASET_COLUMN_INDEX])
+    """
+    return predict, int(np.fix(predict))
 
 
 def do_predict(_):
